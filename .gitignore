@@ -12,6 +12,8 @@ Thumbs.db
 Desktop.ini
 *.pyc
 
+multiple-videos/assets/js/bundle.js
+
 Archive.zip
 *.zip
 
