@@ -22,6 +22,7 @@ module.exports = {
             "enableChroma"   : { type: "i", value: 0 },
             "enableDisplacement"   : { type: "i", value: 0 },
             "enableReflection": { type: "i", value: 0 },
+            "enableRipples": { type: "i", value: 0 },
             "enableColor": { type: "i", value: 0 },
 
             "tOne"     : { type: "t", value: null },
@@ -47,6 +48,7 @@ module.exports = {
             "uHue": { type: "f", value: 0 },
 
             "uTime": { type: "f", value: 1 },
+            "uRes": { type: "f", value: 1 },
 
             "useRefract": { type: "i", value: 0 },
             "uRefractionRatio": { type: "f", value: 0.98 },

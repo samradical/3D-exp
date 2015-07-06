@@ -44,6 +44,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			'click .js-go': 'startProcess'
 		},
 		initialize: function(options) {
+			this.updateCounter = 0;
 			this.guiOptions = Object.create(null);
 			this.guiOptions['enableChroma'] = true;
 			this.guiOptions['enableColor'] = true;
@@ -169,10 +170,13 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			uniforms["enableColor"].value = true;
 			uniforms["enableReflection"].value = true;
 			uniforms["enableDisplacement"].value = true;
+			uniforms["enableRipples"].value = true;
 
 			uniforms["tOne"].value = texture2;
 			uniforms["tTwo"].value = texture;
 			uniforms["tDisplacement"].value = texture;
+
+			uniforms["uRes"].value = VIDEO_HEIGHT / VIDEO_WIDTH;
 
 			uniforms["uDisplacementBias"].value = 1.0;
 			uniforms["uDisplacementScale"].value = 20;
@@ -252,7 +256,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			renderer.render(scene, camera);
 			texture2.needsUpdate = true;
 			texture.needsUpdate = true;
-			videoMaterial.uniforms['uTime'].value = this.updateCounter;
+			videoMaterial.uniforms['uTime'].value = this.updateCounter / 60;
 			this.updateCounter++;
 		}
 

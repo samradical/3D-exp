@@ -111,6 +111,7 @@
             uniform bool enableReflection;
             uniform bool enableDisplacement;
             uniform bool enableColor;
+            uniform bool enableRipples;
 
             uniform sampler2D tOne;
             uniform sampler2D tTwo;
@@ -128,6 +129,7 @@
             uniform float uReflectivity;
 
             uniform float uTime;
+            uniform float uRes;
 
             varying vec3 vTangent;
             varying vec3 vBinormal;
@@ -151,14 +153,25 @@
 
                 gl_FragColor = vec4(vec3(1.0), uOpacity);
 
-                vec4 texelColor = texture2D(tOne, vUv);
-                vec4 bgColor = texture2D(tTwo, vUv);
+                vec2 uv2 = vUv;
+
+                if (enableRipples) {
+                    vec2 center = vec2(0.5, 0.5);
+                    float x = (center.x - uv2.x);
+                    float y = (center.y - uv2.y);
+                    float r = -(x * x + y * y);
+                    float z = 1.0 + 0.01 * sin((r + uTime * 0.02) / 0.13);
+                    uv2.x *= z;
+                    uv2.y *= z;
+                }
+
+                vec4 texelColor = texture2D(tOne, uv2);
+                vec4 bgColor = texture2D(tTwo, uv2);
                 texelColor.xyz *= texelColor.xyz;
 
                 if (enableReflection) {
-                    vec2 uv2 = vUv;
-                    uv2.x += step(uv2.x, 0.5) * (0.5-uv2.x) * 2.0;
-                    uv2.y += step(0.5, uv2.y) * (0.5-uv2.y) * 2.0;
+                    uv2.x += step(uv2.x, 0.5) * (0.5 - uv2.x) * 2.0;
+                    uv2.y += step(0.5, uv2.y) * (0.5 - uv2.y) * 2.0;
                     //uv2.x -= step(0.5, uv2.x) * (uv2.x-0.5) * 2.0;
                     //uv2.y -= step(0.5, uv2.y) * (uv2.y-0.5) * 2.0;
                     texelColor = texture2D(tOne, uv2);
@@ -187,5 +200,6 @@
                     color = mix(color, bgColor.rgb, ff);
                     gl_FragColor = vec4(color, 1.);
                 }
+
 
             }
