@@ -129,6 +129,8 @@
             uniform float uReflectivity;
 
             uniform float uTime;
+            uniform float uWidth;
+            uniform float uHeight;
             uniform float uRes;
 
             varying vec3 vTangent;

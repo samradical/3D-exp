@@ -2,12 +2,11 @@ var App = require('../app');
 var dat = require('dat-gui');
 var Stats = require('stats');
 var TWEEN = require('tweenjs');
-var SHADERS = require('../common/shaders');
+var SHADERS_LIB = require('../common/shader_lib');
 // app dependencies
 var NUM_COLUMNS = 2;
 var VIDEO_WIDTH = 1280;
 var VIDEO_HEIGHT = 720;
-var MAX_PLANES = 4;
 
 var statsEnabled = true;
 
@@ -19,6 +18,12 @@ var planes;
 var videoPlane, videoMaterial, textMaterial, textMaterialSide, textMaterialFront, textMaterialArray, textColor = new THREE.Color(0xFF000);
 var texture, texture2, video;
 var planesGroup;
+
+//Normal map shader
+var ambient = 0xffffff,
+	diffuse = 0xffffff / 5,
+	specular = 0xffffff,
+	scale = 143;
 
 var textMesh, textGeo;
 
@@ -46,57 +51,19 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 		initialize: function(options) {
 			this.updateCounter = 0;
 			this.guiOptions = Object.create(null);
-			this.guiOptions['enableChroma'] = true;
-			this.guiOptions['enableColor'] = true;
-			this.guiOptions['enableDisplacement'] = true;
-			this.guiOptions['enableReflection'] = true;
-			this.guiOptions['saturation'] = 1.01;
-			this.guiOptions['contrast'] = 1.01;
-			this.guiOptions['desaturate'] = 0.01;
-			this.guiOptions['brightness'] = 0.01;
-			this.guiOptions['hue'] = 0.01;
-			this.guiOptions['uDisplacementScale'] = 37;
-			this.guiOptions['numberOfPlanes'] = MAX_PLANES;
+			this.guiOptions['numPlanes'] = 1;
+			this.guiOptions['setShader'] = 'fractal1';
 		},
 		onRender: function() {
 			//gui
 			var gui = new dat.GUI();
-			var cameraControls = gui.addFolder('Camera');
-
-			gui.add(this.guiOptions, 'enableColor').onChange(function(val) {
-				videoMaterial.uniforms['enableColor'].value = val;
+			gui.add(this.guiOptions, 'numPlanes', 1, 4).step(1).onChange(function(val) {
+				this.createPlanes(val);
 			}.bind(this));
-			gui.add(this.guiOptions, 'enableChroma').onChange(function(val) {
-				videoMaterial.uniforms['enableChroma'].value = val;
-			}.bind(this));
-			gui.add(this.guiOptions, 'enableReflection').onChange(function(val) {
-				videoMaterial.uniforms['enableReflection'].value = val;
-			}.bind(this));
-			gui.add(this.guiOptions, 'enableDisplacement').onChange(function(val) {
-				videoMaterial.uniforms['enableDisplacement'].value = val;
-			}.bind(this));
-			gui.add(this.guiOptions, 'saturation', 0.0, 10.0).onChange(function(val) {
-				this.onPeramChanged('uSaturation', val);
-			}.bind(this));
-			gui.add(this.guiOptions, 'contrast', 0.0, 10.0).onChange(function(val) {
-				this.onPeramChanged('uContrast', val);
-			}.bind(this));
-			gui.add(this.guiOptions, 'desaturate', 0.0, 1.0).onChange(function(val) {
-				this.onPeramChanged('uDesaturate', val);
-			}.bind(this));
-			gui.add(this.guiOptions, 'brightness', 0.0, 4.0).onChange(function(val) {
-				this.onPeramChanged('uBrightness', val);
-			}.bind(this));
-			gui.add(this.guiOptions, 'hue', 0.0, Math.PI * 2).onChange(function(val) {
-				this.onPeramChanged('uHue', val);
+			gui.add(this.guiOptions, 'setShader', ['fractal1', 'chroma']).onChange(function(val) {
+				this.setShader(val);
 			}.bind(this));
 
-			gui.add(this.guiOptions, 'numberOfPlanes', 1, MAX_PLANES).step(1).onChange(_.debounce(function(val) {
-				this.createPlanes();
-			}.bind(this), 300));
-			gui.add(this.guiOptions, 'uDisplacementScale', 1, 700).step(1).onChange(function(val) {
-
-			}.bind(this));
 			gui.width = 300;
 			this.gui = gui;
 		},
@@ -105,10 +72,12 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			this.$textEl = this.$el.find('.ThreeFonts');
 
 			this.videoElement = document.getElementById('myVideo');
+			this.videoElement.volume = 0;
 			this.videoElement.width = VIDEO_WIDTH;
 			this.videoElement.height = VIDEO_HEIGHT;
 
 			this.videoElement2 = document.getElementById('myVideo2');
+			this.videoElement2.volume = 0;
 			this.videoElement2.width = VIDEO_WIDTH;
 			this.videoElement2.height = VIDEO_HEIGHT;
 
@@ -155,41 +124,29 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			texture2.minFilter = THREE.LinearFilter;
 			texture2.magFilter = THREE.LinearFilter;
 
+			this.setShader('fractal1');
 
+			this.createPlanes();
 
-			//Normal map shader
-			var ambient = 0xffffff,
-				diffuse = 0xffffff / 5,
-				specular = 0xffffff,
-				scale = 143;
+			window.addEventListener('resize', this.onWindowResize, false);
+		},
 
-			var shader = SHADERS["chroma"];
-			var uniforms = THREE.UniformsUtils.clone(shader.uniforms);
-
-			uniforms["enableChroma"].value = true;
-			uniforms["enableColor"].value = true;
-			uniforms["enableReflection"].value = true;
-			uniforms["enableDisplacement"].value = true;
-			uniforms["enableRipples"].value = true;
-
+		setShader: function(name) {
+			var d = SHADERS_LIB[name]();
+			var shader = d['shader'];
+			var uniforms = d['uniforms'];
 			uniforms["tOne"].value = texture2;
 			uniforms["tTwo"].value = texture;
 			uniforms["tDisplacement"].value = texture;
-
-			uniforms["uRes"].value = VIDEO_HEIGHT / VIDEO_WIDTH;
-
-			uniforms["uDisplacementBias"].value = 1.0;
-			uniforms["uDisplacementScale"].value = 20;
-
 			uniforms["uAmbientColor"].value.setHex(ambient);
 			uniforms["uDiffuseColor"].value.setHex(diffuse);
 
-			uniforms["uAmbientColor"].value.convertGammaToLinear();
-			uniforms["uDiffuseColor"].value.convertGammaToLinear();
+			uniforms["uWidth"].value = VIDEO_WIDTH;
+			uniforms["uHeight"].value = VIDEO_HEIGHT;
+			uniforms["uRes"].value = VIDEO_HEIGHT / VIDEO_WIDTH;
 
-
-			//uniforms["tOne"].value = texture;
-			//uniforms["tTwo"].value = texture;
+			console.log(shader);
+			console.log(uniforms);
 
 			var parameters = {
 				fragmentShader: shader.fragmentShader,
@@ -201,32 +158,43 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 				map: texture,
 				side: THREE.DoubleSide
 			};
-
 			videoMaterial = new THREE.ShaderMaterial(parameters);
-
 			this.createPlanes();
-
-			window.addEventListener('resize', this.onWindowResize, false);
+			/*if (!videoMaterial) {
+				videoMaterial = new THREE.ShaderMaterial(parameters);
+			} else {
+				videoMaterial['fragmentShader'] = shader.fragmentShader;
+				videoMaterial['vertexShader'] = shader.vertexShader;
+				videoMaterial['uniforms'] = uniforms;
+			}*/
 		},
 
 		createPlanes: function() {
+			if (planes.length > 0) {
+				for (var i = 0; i < planes.length; i++) {
+					planesGroup.remove(planes[i]);
+				}
+				scene.remove(planesGroup);
+				planes.length = 0;
+				planesGroup = null;
+			}
+			var columns = 2;
+			var rows = 0;
+			var numPlanes = this.guiOptions['numPlanes'];
 			planesGroup = new THREE.Object3D();
-			planesGroup.position.set(0, -VIDEO_HEIGHT / (MAX_PLANES / 2),0);
-			for (var i = 0; i < MAX_PLANES; i++) {
+			//planesGroup.position.set(0, -VIDEO_HEIGHT / (numPlanes / 2), 0);
+			for (var i = 0; i < numPlanes; i++) {
 				var mesh = new THREE.Mesh(geometry, videoMaterial);
 
-				var offsetX = 2 * VIDEO_WIDTH / 4;
-				var offsetY = VIDEO_HEIGHT-2;
-				var d = Math.floor(i / 2);
-				if (i % 2 !== 0) {
-					mesh.position.set(-offsetX, offsetY * d, -1500);
+				var offsetX = numPlanes > 1 ? 2 * VIDEO_WIDTH / 4 : 0;
+				var offsetY = VIDEO_HEIGHT - 2;
+				if (i % columns !== 0) {
+					mesh.position.set(-offsetX, offsetY * rows, -1500);
 				} else {
-					mesh.position.set(offsetX,offsetY * d, -1500);
+					planesGroup.position.y = -(offsetY * .5) * rows - offsetY;
+					rows++;
+					mesh.position.set(offsetX, offsetY * rows, -1500);
 				}
-
-				/*if (i % 2 !== 0) {
-					mesh.rotation.set(0, Math.PI, 0);
-				}*/
 				planes.push(mesh);
 				planesGroup.add(mesh);
 			}
