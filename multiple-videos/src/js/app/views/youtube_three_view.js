@@ -60,9 +60,9 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			gui.add(this.guiOptions, 'numPlanes', 1, 4).step(1).onChange(function(val) {
 				this.createPlanes(val);
 			}.bind(this));
-			gui.add(this.guiOptions, 'setShader', ['fractal1', 'chroma']).onChange(function(val) {
+			gui.add(this.guiOptions, 'setShader', ['fractal1', 'chroma', 'cave']).onChange(_.debounce(function(val) {
 				this.setShader(val);
-			}.bind(this));
+			},100).bind(this));
 
 			gui.width = 300;
 			this.gui = gui;
@@ -124,7 +124,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			texture2.minFilter = THREE.LinearFilter;
 			texture2.magFilter = THREE.LinearFilter;
 
-			this.setShader('fractal1');
+			this.setShader('cave');
 
 			this.createPlanes();
 

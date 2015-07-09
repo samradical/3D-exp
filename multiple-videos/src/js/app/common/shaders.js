@@ -96,5 +96,34 @@ module.exports = {
                 
                 fragmentShader:glslify('../../../glsl/fractal1.frag'),
                 vertexShader:glslify('../../../glsl/displacement.vert')
-            }
+            },
+            'cave' : {
+                uniforms: THREE.UniformsUtils.merge( [
+                     THREE.UniformsLib[ "fog" ],
+                        THREE.UniformsLib[ "lights" ],
+                        THREE.UniformsLib[ "shadowmap" ],
+
+                    {
+                    "tOne"     : { type: "t", value: null },
+                    "tTwo"     : { type: "t", value: null },
+                    "tDisplacement"     : { type: "t", value: null },
+
+                    "uDiffuseColor": { type: "c", value: new THREE.Color( 0xffffff ) },
+                    "uSpecularColor": { type: "c", value: new THREE.Color( 0x111111 ) },
+                    "uAmbientColor": { type: "c", value: new THREE.Color( 0xffffff ) },
+
+                    "uTime": { type: "f", value: 1 },
+                    "uWidth": { type: "f", value: 1 },
+                    "uHeight": { type: "f", value: 1 },
+                    "uRes": { type: "f", value: 1 },
+                    "uOffset" : { type: "v2", value: new THREE.Vector2( 0, 0 ) },
+                    "uRepeat" : { type: "v2", value: new THREE.Vector2( 1, 1 ) }
+
+                    }
+
+                    ] ),
+                    
+                    fragmentShader:glslify('../../../glsl/cave.frag'),
+                    vertexShader:glslify('../../../glsl/displacement.vert')
+                }
     };

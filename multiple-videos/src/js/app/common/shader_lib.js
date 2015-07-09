@@ -30,5 +30,16 @@ module.exports = {
                 shader:shader,
                 uniforms:uniforms
             }
+        },
+         cave:function(){
+            var shader = SHADERS["cave"];
+            var uniforms = THREE.UniformsUtils.clone(shader.uniforms);
+
+            uniforms["uAmbientColor"].value.convertGammaToLinear();
+            uniforms["uDiffuseColor"].value.convertGammaToLinear();
+            return {
+                shader:shader,
+                uniforms:uniforms
+            }
         }
     };
