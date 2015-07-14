@@ -10,6 +10,25 @@ var myShader = createShader(source);
 console.log(myShader);*/
 
 module.exports = {
+    'mix' : {
+        uniforms: THREE.UniformsUtils.merge( [
+
+            {
+
+            "uMixRatio"   : { type: "f", value: 0.5 },
+            "uThreshold"   : { type: "f", value: 0.5 },
+
+            "tOne"     : { type: "t", value: null },
+            "tTwo"     : { type: "t", value: null },
+            "tMix"     : { type: "t", value: null },
+
+            }
+
+            ] ),
+            
+            fragmentShader:glslify('../../../glsl/mix.frag'),
+            vertexShader:glslify('../../../glsl/basic.vert')
+    },
     'chroma' : {
         uniforms: THREE.UniformsUtils.merge( [
 

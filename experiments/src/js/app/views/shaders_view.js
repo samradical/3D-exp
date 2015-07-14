@@ -1,8 +1,8 @@
 var App = require('../app');
 var dat = require('dat-gui');
 var Stats = require('stats');
-var TWEEN = require('tweenjs');
 var SHADERS_LIB = require('../common/shader_lib');
+var THREE_SCENE = require('../common/three_scene');
 // app dependencies
 var NUM_COLUMNS = 2;
 var VIDEO_WIDTH = 1280;
@@ -43,7 +43,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 
 	'use strict';
 
-	Views.YoutubeThreeView = Marionette.ItemView.extend({
+	Views.ShaderView = Marionette.ItemView.extend({
 		template: JST['youtube_three'],
 		events: {
 			'click .js-go': 'startProcess'
@@ -81,9 +81,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			this.videoElement2.width = VIDEO_WIDTH;
 			this.videoElement2.height = VIDEO_HEIGHT;
 
-			this.boundAnimate = this.animate.bind(this);
 			this.setup3D();
-			this.boundAnimate();
 		},
 
 		////------------------------
@@ -91,27 +89,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 		////------------------------
 
 		setup3D: function() {
-
 			planes = [];
-
-			container = document.getElementById('three');
-			this.el.appendChild(container);
-			camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-			camera.rotation.set(0, 0, 0);
-
-			scene = new THREE.Scene();
-
-			renderer = new THREE.WebGLRenderer();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			container.appendChild(renderer.domElement);
-
-			// LIGHTS
-			ambientLight = new THREE.AmbientLight(0xffffff);
-			scene.add(ambientLight);
-
-			controls = new THREE.TrackballControls(camera, renderer.domElement);
-			renderer.gammaInput = true;
-			renderer.gammaOutput = true;
 
 			geometry = new THREE.PlaneGeometry(VIDEO_WIDTH, VIDEO_HEIGHT, 480, 270);
 			geometry.computeTangents();
@@ -124,11 +102,10 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			texture2.minFilter = THREE.LinearFilter;
 			texture2.magFilter = THREE.LinearFilter;
 
+			var _s = new THREE_SCENE();
+			scene = _s.init(document.getElementById('three'), this.threeRender.bind(this));
+
 			this.setShader('cave');
-
-			this.createPlanes();
-
-			window.addEventListener('resize', this.onWindowResize, false);
 		},
 
 		setShader: function(name) {
@@ -160,13 +137,6 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			};
 			videoMaterial = new THREE.ShaderMaterial(parameters);
 			this.createPlanes();
-			/*if (!videoMaterial) {
-				videoMaterial = new THREE.ShaderMaterial(parameters);
-			} else {
-				videoMaterial['fragmentShader'] = shader.fragmentShader;
-				videoMaterial['vertexShader'] = shader.vertexShader;
-				videoMaterial['uniforms'] = uniforms;
-			}*/
 		},
 
 		createPlanes: function() {
@@ -189,11 +159,11 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 				var offsetX = numPlanes > 1 ? 2 * VIDEO_WIDTH / 4 : 0;
 				var offsetY = VIDEO_HEIGHT - 2;
 				if (i % columns !== 0) {
-					mesh.position.set(-offsetX, offsetY * rows, -1500);
+					mesh.position.set(-offsetX, offsetY * rows, 0);
 				} else {
 					planesGroup.position.y = -(offsetY * .5) * rows - offsetY;
 					rows++;
-					mesh.position.set(offsetX, offsetY * rows, -1500);
+					mesh.position.set(offsetX, offsetY * rows, 0);
 				}
 				planes.push(mesh);
 				planesGroup.add(mesh);
@@ -201,30 +171,12 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			scene.add(planesGroup);
 		},
 
-		onWindowResize: function() {
-			windowHalfX = window.innerWidth / 2;
-			windowHalfY = window.innerHeight / 2;
-			camera.updateProjectionMatrix();
-			renderer.setSize(window.innerWidth, window.innerHeight);
-		},
-
-		onDocumentMouseMove: function(event) {
-			mouseX = (event.clientX - windowHalfX) * 10;
-			mouseY = (event.clientY - windowHalfY) * 10;
-		},
-
-		animate: function() {
-			window.requestAnimationFrame(this.boundAnimate);
-			this.threeRender();
-		},
-
 		threeRender: function() {
-			controls.update();
-			TWEEN.update();
-			renderer.render(scene, camera);
 			texture2.needsUpdate = true;
 			texture.needsUpdate = true;
-			videoMaterial.uniforms['uTime'].value = this.updateCounter / 60;
+			if(videoMaterial){
+				videoMaterial.uniforms['uTime'].value = this.updateCounter / 60;
+			}
 			this.updateCounter++;
 		}
 
@@ -232,4 +184,4 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 });
 
 // export
-module.exports = App.YoutubeThreeView;
+module.exports = App.ShaderView;

@@ -10,7 +10,8 @@ App.module('Regions', function(Regions, App, Backbone, Marionette, $, _) {
 		initialize: function() {
 			// define regions
 			var data = {};
-			data['app'] = '#app-region';
+			data['nav'] = '#nav-region';
+			data['content'] = '#content-region';
 			this.addRegions(data);
 		}
 	});

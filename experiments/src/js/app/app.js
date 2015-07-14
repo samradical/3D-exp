@@ -14,7 +14,8 @@ App.addInitializer(function() {
     require('./regions/app_regions');
 
     require('./views/app_view');
-    require('./views/youtube_three_view');
+    require('./views/shaders_view');
+    require('./views/composer_view');
     require('./controllers/app_controller');
 });
 

@@ -2,7 +2,16 @@ this.JST = {"app": function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<div class="App">\n\t<div class="AppButton js-youtube"><span>YOUTUBE</span></div>\n\t<div class="AppButton js-vlc">VLC</div>\n\t<div class="AppButton js-youtubeMix">YOUTUBE MIX</div>\n\t<div class="AppButton js-youtubePlayer">YOUTUBE PLAYER</div>\n\t<div class="AppButton js-threeMix">THREEJS</div>\n</div>';
+__p += '<div class="App">\n\t<button class="btn btn-default js-shader">Shader</button>\n\t<button class="btn btn-default js-composer">Composer</button>\n\t<div id="#content"></div>\n</div>';
+
+}
+return __p
+},
+"composer_view": function(obj) {
+obj || (obj = {});
+var __t, __p = '', __e = _.escape;
+with (obj) {
+__p += '<div class="ThreeView">\n\t<video id="myVideo" src="../fat.mp4" loop controls autoplay ></video>\n\t<video id="myVideo2" src="../pig.mp4" loop controls autoplay ></video>\n\t<div id="three"></div>\n</div>';
 
 }
 return __p

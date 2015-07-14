@@ -12,8 +12,8 @@ App.module('AppController', function(AppController, App, Backbone, Marionette, $
 		},
 
 		createViews: function() {
-			this.appView = new App.Views.YoutubeThreeView();
-			App.Regions.show('app', this.appView);
+			this.appView = new App.Views.App();
+			App.Regions.show('nav', this.appView);
 		}
 	});
 
