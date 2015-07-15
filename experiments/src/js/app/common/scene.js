@@ -1,6 +1,5 @@
 'use strict';
 var UTILS = require('./utils');
-var MAX_ASPECT = 2.31;
 
 var Scene = function(renderer, clearColor, cameraZ) {
 	var fbo;

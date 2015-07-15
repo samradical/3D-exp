@@ -66,7 +66,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 				videoMaterial.uniforms["uMixRatio"].value = this.guiOptions['uMixRatio'];
 			}.bind(this));
 
-			gui.add(this.guiOptions, 'uThreshold', 0, 1).onChange(function() {
+			gui.add(this.guiOptions, 'uThreshold', 0, .5).onChange(function() {
 				videoMaterial.uniforms["uThreshold"].value = this.guiOptions['uThreshold'];
 			}.bind(this));
 
