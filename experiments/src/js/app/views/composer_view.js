@@ -7,8 +7,9 @@ var SCENE = require('../common/scene');
 var UTILS = require('../common/utils');
 // app dependencies
 var NUM_COLUMNS = 2;
-var VIDEO_WIDTH = 1280;
-var VIDEO_HEIGHT = 720;
+var VIDEO_WIDTH = 480;
+var VIDEO_HEIGHT = 360;
+var MAX_ASPECT = 2.31;
 
 var statsEnabled = true;
 
@@ -81,6 +82,11 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			this.videoElement2.width = VIDEO_WIDTH;
 			this.videoElement2.height = VIDEO_HEIGHT;
 
+			this.videoElement3 = document.getElementById('mixer');
+			this.videoElement3.volume = 0;
+			this.videoElement3.width = VIDEO_WIDTH;
+			this.videoElement3.height = VIDEO_HEIGHT;
+
 			this.gui = gui;
 			this.setup3D();
 		},
@@ -90,7 +96,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 		////------------------------
 
 		setup3D: function() {
-			var Z_DIS = 20;
+			var Z_DIS = 400;
 			renderer = new THREE.WebGLRenderer({
 				antialias: true
 			});
@@ -106,7 +112,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			camera.position.set(0, 0, Z_DIS);
 
 			controls = new THREE.TrackballControls(camera, renderer.domElement);
-			controls.minDistance = 400;
+			controls.minDistance = Z_DIS;
 			controls.maxDistance = 1000;
 
 			texture1 = new THREE.Texture(this.videoElement);
@@ -117,15 +123,20 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			texture2.minFilter = THREE.LinearFilter;
 			texture2.magFilter = THREE.LinearFilter;
 
-			texture3 = new THREE.ImageUtils.loadTexture('../img1.jpg');
+			texture3 = new THREE.Texture(this.videoElement3);
+			texture3.minFilter = THREE.LinearFilter;
+			texture3.magFilter = THREE.LinearFilter;
+
+			//texture3 = new THREE.ImageUtils.loadTexture('../img1.jpg');
+			var scaleObj = UTILS.onAspectResize();
 
 			sceneA = new SCENE(renderer, 0xffffff, Z_DIS);
-			sceneA.createPlane(VIDEO_WIDTH, VIDEO_HEIGHT, new THREE.MeshBasicMaterial({
+			sceneA.createPlane(scaleObj.w, scaleObj.h, new THREE.MeshBasicMaterial({
 				map: texture1
 			}));
 
 			sceneB = new SCENE(renderer, 0x000000, Z_DIS);
-			sceneB.createPlane(VIDEO_WIDTH, VIDEO_HEIGHT, new THREE.MeshBasicMaterial({
+			sceneB.createPlane(scaleObj.w, scaleObj.h, new THREE.MeshBasicMaterial({
 				map: texture2
 			}));
 
@@ -144,8 +155,8 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 				vertexShader: shader.vertexShader,
 				uniforms: uniforms
 			};
-
-			var quadgeometry = new THREE.PlaneGeometry(window.innerWidth, window.innerHeight, 4, 4);
+			var quadgeometry = new THREE.PlaneGeometry(scaleObj.w, scaleObj.h, 4, 4);
+			//THREE.GeometryUtils.center(quadgeometry);
 
 			videoMaterial = new THREE.ShaderMaterial(parameters);
 
@@ -160,17 +171,28 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			this.boundAnimate();
 
 			window.addEventListener('resize', this.onWindowResize.bind(this), false);
+
+			this.onWindowResize();
+		},
+		onWindowResize: function() {
+			var w = window.innerWidth;
+			var h = window.innerHeight;
+			camera.aspect = w/h;
+			console.log(camera.aspect);
+			var scale = 0;
+			if (w/h > MAX_ASPECT) {
+				scale = 1 + w/h / MAX_ASPECT;
+			} else {
+				scale =1
+			}
+			this.quad.scale.x = this.quad.scale.y = scale;
+			renderer.setSize(w, h)
+			sceneA.resize(w, h, scale);
+			sceneB.resize(w, h, scale);
 		},
 		handleResize: function(w, h) {
 			console.log(w, h);
-			sceneA.resize(w, h);
-			sceneB.resize(w, h);
-			renderer.setSize(w, h);
 		},
-		onWindowResize: function() {
-			UTILS.onAspectResize(window.innerWidth, window.innerHeight, this.handleResize);
-		},
-
 		animate: function() {
 			window.requestAnimationFrame(this.boundAnimate);
 			this.threeRender();
@@ -181,6 +203,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			controls.update();
 			texture1.needsUpdate = true;
 			texture2.needsUpdate = true;
+			texture3.needsUpdate = true;
 			videoMaterial.uniforms.uMixRatio.value = this.guiOptions['uMixRatio'];
 			videoMaterial.uniforms.uThreshold.value = this.guiOptions['uThreshold'];
 			if (this.guiOptions['uMixRatio'] == 0) {
