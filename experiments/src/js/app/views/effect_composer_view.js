@@ -3,11 +3,12 @@ var dat = require('dat-gui');
 var Stats = require('stats');
 var SHADERS_LIB = require('../common/shader_lib');
 var THREE_SCENE = require('../common/three_scene');
-var SCENE = require('../common/scene');
+var SCENE_FACTORY = require('../common/scene_factory');
 var UTILS = require('../common/utils');
+var COMPOSER_FACTORY = require('../common/composer_factory');
 // app dependencies
 var NUM_COLUMNS = 2;
-var VIDEO_WIDTH = 480;
+var VIDEO_WIDTH = 640;
 var VIDEO_HEIGHT = 360;
 var MAX_ASPECT = 2.31;
 
@@ -41,13 +42,16 @@ var controls;
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight / 2;
 
+var composers = [];
+var composersL = 0;
+
 // define module
 App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 
 	'use strict';
 
-	Views.Composer = Marionette.ItemView.extend({
-		template: JST['composer_view'],
+	Views.EffectsComposer = Marionette.ItemView.extend({
+		template: JST['effect_composer_view'],
 		events: {
 			'click .js-go': 'startProcess'
 		},
@@ -103,8 +107,13 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 		setup3D: function() {
 			var Z_DIS = 400;
 			renderer = new THREE.WebGLRenderer({
-				antialias: true
+				antialias: true,
+				autoClear: false
+
 			});
+			renderer.gammaInput = true;
+			renderer.gammaOutput = true;
+
 			renderer.setSize(window.innerWidth, window.innerHeight);
 			document.getElementById('three').appendChild(renderer.domElement);
 
@@ -135,15 +144,17 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			//texture3 = new THREE.ImageUtils.loadTexture('../img1.jpg');
 			var scaleObj = UTILS.onAspectResize();
 
-			sceneA = new SCENE(renderer, 0xffffff, Z_DIS);
-			sceneA.createPlane(scaleObj.w, scaleObj.h, new THREE.MeshBasicMaterial({
+			sceneA = new SCENE_FACTORY();
+			sceneA.createScene(new THREE.MeshBasicMaterial({
 				map: texture1
 			}));
 
-			sceneB = new SCENE(renderer, 0x000000, Z_DIS);
-			sceneB.createPlane(scaleObj.w, scaleObj.h, new THREE.MeshBasicMaterial({
+			sceneB = new SCENE_FACTORY();
+			sceneB.createScene(new THREE.MeshBasicMaterial({
 				map: texture2
 			}));
+
+			scene = new THREE.Scene();
 
 			var d = SHADERS_LIB['mix']();
 			console.log(d);
@@ -151,6 +162,8 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			var uniforms = d['uniforms'];
 			uniforms["tOne"].value = sceneA.fbo;
 			uniforms["tTwo"].value = sceneB.fbo;
+			/*uniforms["tOne"].value = texture1;
+			uniforms["tTwo"].value = texture2;*/
 			uniforms["tMix"].value = texture3;
 			uniforms["uMixRatio"].value = this.guiOptions['uMixRatio'];
 			uniforms["uThreshold"].value = this.guiOptions['uThreshold'];
@@ -160,12 +173,27 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 				vertexShader: shader.vertexShader,
 				uniforms: uniforms
 			};
+
+			this.composerFactory = new COMPOSER_FACTORY();
+
+			composers[0] = this.composerFactory.createComposer(renderer, scene, camera);
+			//vid1
+			composers[1] = this.composerFactory.createComposer(renderer, sceneA, camera);
+			//vid2
+			composers[2] = this.composerFactory.createComposer(renderer, sceneB, camera);
+
+
+			console.log(composers[0]);
+
+			composersL = composers.length;
+
+			this.scenePass  = new THREE.TexturePass( composers[0].renderPass );
+			composers[0].addPass(this.scenePass);
+			composers[1].addPass(this.scenePass);
+
 			var quadgeometry = new THREE.PlaneGeometry(scaleObj.w, scaleObj.h, 4, 4);
-			//THREE.GeometryUtils.center(quadgeometry);
 
 			videoMaterial = new THREE.ShaderMaterial(parameters);
-
-			scene = new THREE.Scene();
 
 			this.quad = new THREE.Mesh(quadgeometry, videoMaterial);
 			scene.add(this.quad);
@@ -190,8 +218,9 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			}
 			this.quad.scale.x = this.quad.scale.y = scale;
 			renderer.setSize(w, h)
-			sceneA.resize(w, h, scale);
-			sceneB.resize(w, h, scale);
+			_.each(composers, function(c) {
+				c.setSize(w, h);
+			});
 		},
 		handleResize: function(w, h) {
 			console.log(w, h);
@@ -203,13 +232,14 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 		},
 
 		threeRender: function() {
+			//	var 
 			controls.update();
 			texture1.needsUpdate = true;
 			texture2.needsUpdate = true;
 			texture3.needsUpdate = true;
-			videoMaterial.uniforms.uMixRatio.value = this.guiOptions['uMixRatio'];
-			videoMaterial.uniforms.uThreshold.value = this.guiOptions['uThreshold'];
-			if (this.guiOptions['uMixRatio'] == 0) {
+			//videoMaterial.uniforms.uMixRatio.value = this.guiOptions['uMixRatio'];
+			//videoMaterial.uniforms.uThreshold.value = this.guiOptions['uThreshold'];
+			/*if (this.guiOptions['uMixRatio'] == 0) {
 				sceneB.render(false);
 			} else if (this.guiOptions['uMixRatio'] == 1) {
 				sceneA.render(false);
@@ -217,6 +247,12 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 				sceneA.render(true);
 				sceneB.render(true);
 				renderer.render(scene, camera, null, true);
+			}*/
+			renderer.clear();
+			renderer.render(scene, camera, null, true);
+			//renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+			for (var i = 0; i < composersL; i++) {
+				composers[i].render(0.01);
 			}
 		}
 
@@ -224,4 +260,4 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 });
 
 // export
-module.exports = App.Composer;
+module.exports = App.EffectsComposer;

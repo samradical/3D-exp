@@ -17,7 +17,7 @@ module.exports = {
 
             "uMixRatio"   : { type: "f", value: 0.5 },
             "uThreshold"   : { type: "f", value: 0.5 },
-            "uSaturation"   : { type: "f", value: 1. },
+            "w"   : { type: "f", value: 1. },
 
             "tOne"     : { type: "t", value: null },
             "tTwo"     : { type: "t", value: null },
@@ -29,7 +29,7 @@ module.exports = {
             
             fragmentShader:glslify('../../../glsl/mix.frag'),
             vertexShader:glslify('../../../glsl/basic.vert')
-    },
+    },//HOTDAAWGS
     'chroma' : {
         uniforms: THREE.UniformsUtils.merge( [
 
@@ -113,7 +113,7 @@ module.exports = {
                 }
 
                 ] ),
-                
+                //HOTDAAWGS
                 fragmentShader:glslify('../../../glsl/fractal1.frag'),
                 vertexShader:glslify('../../../glsl/displacement.vert')
             },
@@ -145,5 +145,22 @@ module.exports = {
                     
                     fragmentShader:glslify('../../../glsl/cave.frag'),
                     vertexShader:glslify('../../../glsl/displacement.vert')
-                }
+                },
+                'bleach':require('./shaders/BleachBypassShader'),
+                'blend':require('./shaders/BlendShader'),
+                'bokeh':require('./shaders/BokehShader2'),
+                'colorify':require('./shaders/ColorifyShader'),
+                'colvolution':require('./shaders/ConvolutionShader'),
+                'glitch':require('./shaders/DigitalGlitch'),
+                'dot':require('./shaders/DotScreenShader'),
+                'edge':require('./shaders/EdgeShader2'),
+                'film':require('./shaders/FilmShader'),
+                'blurH':require('./shaders/HorizontalBlurShader'),
+                'kaleido':require('./shaders/KaleidoShader'),
+                'lumo':require('./shaders/LuminosityShader'),
+                'rgbShift':require('./shaders/RGBShiftShader'),
+                'technicolor':require('./shaders/TechnicolorShader'),
+                'triBlur':require('./shaders/TriangleBlurShader'),
+                'blurV':require('./shaders/VerticalBlurShader'),
+                'vignette':require('./shaders/VignetteShader')
     };

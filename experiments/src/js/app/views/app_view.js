@@ -9,7 +9,8 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
         },
         events: {
             'click .js-shader': 'onShader',
-            'click .js-composer': 'onComposer'
+            'click .js-composer': 'onComposer',
+            'click .js-fxcomposer': 'onFxComposer'
         },
         initialize: function(options) {
         },
@@ -24,6 +25,12 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
         onComposer: function() {
             this.composerView = new App.Views.Composer();
             App.Regions.show('content', this.composerView);
+            //this.contentz.show(this.shaderView);
+        },
+        onFxComposer: function() {
+            console.log("sdsdsdsdsd");
+            this.fxComposerView = new App.Views.EffectsComposer();
+            App.Regions.show('content', this.fxComposerView);
             //this.contentz.show(this.shaderView);
         }
     });
