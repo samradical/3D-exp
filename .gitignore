@@ -88,3 +88,5 @@ mobile/assets/vendor/**/*
 videos/**/*
 .env
 *.AVI
+*.mp4
+assets/js/**/*

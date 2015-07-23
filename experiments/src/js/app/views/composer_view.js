@@ -58,6 +58,7 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			this.guiOptions = Object.create(null);
 			this.guiOptions['uMixRatio'] = 0.01;
 			this.guiOptions['uThreshold'] = 0.01;
+			this.guiOptions['uSaturation'] = 0.01;
 		},
 		onShow: function() {
 			var self = this;
@@ -68,6 +69,10 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 
 			gui.add(this.guiOptions, 'uThreshold', 0, .5).onChange(function() {
 				videoMaterial.uniforms["uThreshold"].value = this.guiOptions['uThreshold'];
+			}.bind(this));
+
+			gui.add(this.guiOptions, 'uSaturation', 0, 2.).onChange(function() {
+				videoMaterial.uniforms["uSaturation"].value = this.guiOptions['uSaturation'];
 			}.bind(this));
 
 			gui.width = 300;
@@ -177,13 +182,13 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 		onWindowResize: function() {
 			var w = window.innerWidth;
 			var h = window.innerHeight;
-			camera.aspect = w/h;
+			camera.aspect = w / h;
 			console.log(camera.aspect);
 			var scale = 0;
-			if (w/h > MAX_ASPECT) {
-				scale = 1 + w/h / MAX_ASPECT;
+			if (w / h > MAX_ASPECT) {
+				scale = 1 + w / h / MAX_ASPECT;
 			} else {
-				scale =1
+				scale = 1
 			}
 			this.quad.scale.x = this.quad.scale.y = scale;
 			renderer.setSize(w, h)

@@ -17,6 +17,7 @@ module.exports = {
 
             "uMixRatio"   : { type: "f", value: 0.5 },
             "uThreshold"   : { type: "f", value: 0.5 },
+            "uSaturation"   : { type: "f", value: 1. },
 
             "tOne"     : { type: "t", value: null },
             "tTwo"     : { type: "t", value: null },
