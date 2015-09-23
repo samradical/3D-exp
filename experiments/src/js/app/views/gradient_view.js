@@ -50,36 +50,16 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 
 	'use strict';
 
-	Views.EffectsComposer = Marionette.ItemView.extend({
-		template: JST['effect_composer_view'],
+	Views.Gradient = Marionette.ItemView.extend({
+		template: JST['gradient_view'],
 		events: {
 			'click .js-go': 'startProcess'
 		},
 		initialize: function(options) {},
 		onRender: function() {
 			//gui
-			this.updateCounter = 0;
-			this.guiOptions = Object.create(null);
-			this.guiOptions['uMixRatio'] = 0.01;
-			this.guiOptions['uThreshold'] = 0.01;
-			this.guiOptions['uSaturation'] = 0.01;
 		},
 		onShow: function() {
-			var self = this;
-			var gui = new dat.GUI();
-			gui.add(this.guiOptions, 'uMixRatio', 0, 1).onChange(function(val) {
-				videoMaterial.uniforms["uMixRatio"].value = this.guiOptions['uMixRatio'];
-			}.bind(this));
-
-			gui.add(this.guiOptions, 'uThreshold', 0, .5).onChange(function() {
-				videoMaterial.uniforms["uThreshold"].value = this.guiOptions['uThreshold'];
-			}.bind(this));
-
-			gui.add(this.guiOptions, 'uSaturation', 0, 2.).onChange(function() {
-				videoMaterial.uniforms["uSaturation"].value = this.guiOptions['uSaturation'];
-			}.bind(this));
-
-			gui.width = 300;
 
 			this.videoElement = document.getElementById('myVideo');
 			this.videoElement.volume = 0;
@@ -91,12 +71,6 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			this.videoElement2.width = VIDEO_WIDTH;
 			this.videoElement2.height = VIDEO_HEIGHT;
 
-			this.videoElement3 = document.getElementById('mixer');
-			this.videoElement3.volume = 0;
-			this.videoElement3.width = VIDEO_WIDTH;
-			this.videoElement3.height = VIDEO_HEIGHT;
-
-			this.gui = gui;
 			this.setup3D();
 		},
 
@@ -137,49 +111,18 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			texture2.minFilter = THREE.LinearFilter;
 			texture2.magFilter = THREE.LinearFilter;
 
-			texture3 = new THREE.Texture(this.videoElement3);
-			texture3.minFilter = THREE.LinearFilter;
-			texture3.magFilter = THREE.LinearFilter;
-
 			//texture3 = new THREE.ImageUtils.loadTexture('../img1.jpg');
 			var scaleObj = UTILS.onAspectResize();
-
-			sceneA = new SCENE_FACTORY();
-			sceneA.createScene(new THREE.MeshBasicMaterial({
-				map: texture1
-			}));
-
-			sceneB = new SCENE_FACTORY();
-			sceneB.createScene(new THREE.MeshBasicMaterial({
-				map: texture2
-			}));
 
 			scene = new THREE.Scene();
 
 
-			this.composerFactory = new COMPOSER_FACTORY();
 
-			composers[0] = this.composerFactory.createComposer(renderer, scene, camera);
-			//vid1
-			composers[1] = this.composerFactory.createComposer(renderer, sceneA, camera);
-			//vid2
-			composers[2] = this.composerFactory.createComposer(renderer, sceneB, camera);
-
-			var renderScene1 = new THREE.TexturePass( composers[1].renderTarget1 );
-			var renderScene2 = new THREE.TexturePass( composers[2].renderTarget1 );
-
-			composersL = composers.length;
-
-			var d = SHADERS_LIB['mix']();
+			var d = SHADERS_LIB['gradient']();
 			var shader = d['shader'];
 			var uniforms = d['uniforms'];
-			uniforms["tOne"].value = renderScene1;
-			uniforms["tTwo"].value = renderScene2;
-			/*uniforms["tOne"].value = texture1;
-			uniforms["tTwo"].value = texture2;*/
-			uniforms["tMix"].value = texture3;
-			uniforms["uMixRatio"].value = this.guiOptions['uMixRatio'];
-			uniforms["uThreshold"].value = this.guiOptions['uThreshold'];
+			uniforms["tOne"].value = texture1;
+			uniforms["tGrade"].value = texture2;
 
 			var parameters = {
 				fragmentShader: shader.fragmentShader,
@@ -217,9 +160,6 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			}
 			this.quad.scale.x = this.quad.scale.y = scale;
 			renderer.setSize(w, h)
-			_.each(composers, function(c) {
-				c.setSize(w, h);
-			});
 		},
 		handleResize: function(w, h) {
 			console.log(w, h);
@@ -235,7 +175,6 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			controls.update();
 			texture1.needsUpdate = true;
 			texture2.needsUpdate = true;
-			texture3.needsUpdate = true;
 			//videoMaterial.uniforms.uMixRatio.value = this.guiOptions['uMixRatio'];
 			//videoMaterial.uniforms.uThreshold.value = this.guiOptions['uThreshold'];
 			/*if (this.guiOptions['uMixRatio'] == 0) {
@@ -249,14 +188,10 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
 			}*/
 			renderer.clear();
 			renderer.render(scene, camera, null, true);
-			//renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-			for (var i = 0; i < composersL; i++) {
-				composers[i].render(0.01);
-			}
 		}
 
 	});
 });
 
 // export
-module.exports = App.EffectsComposer;
+module.exports = App.Gradient;

@@ -10,7 +10,8 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
         events: {
             'click .js-shader': 'onShader',
             'click .js-composer': 'onComposer',
-            'click .js-fxcomposer': 'onFxComposer'
+            'click .js-fxcomposer': 'onFxComposer',
+            'click .js-gradient': 'onGradient'
         },
         initialize: function(options) {
         },
@@ -31,6 +32,10 @@ App.module('Views', function(Views, App, Backbone, Marionette, $, _) {
             console.log("sdsdsdsdsd");
             this.fxComposerView = new App.Views.EffectsComposer();
             App.Regions.show('content', this.fxComposerView);
+            //this.contentz.show(this.shaderView);
+        },
+         onGradient: function() {
+            App.Regions.show('content', new App.Views.Gradient());
             //this.contentz.show(this.shaderView);
         }
     });

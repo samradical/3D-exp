@@ -1,5 +1,13 @@
 var SHADERS = require('./shaders');
 module.exports = {
+    gradient: function() {
+        var shader = SHADERS["gradient"];
+        var uniforms = THREE.UniformsUtils.clone(shader.uniforms);
+        return {
+            shader: shader,
+            uniforms: uniforms
+        }
+    },
     mix: function() {
         var shader = SHADERS["mix"];
         var uniforms = THREE.UniformsUtils.clone(shader.uniforms);

@@ -21,6 +21,7 @@ App.addInitializer(function() {
     require('./views/shaders_view');
     require('./views/composer_view');
     require('./views/effect_composer_view');
+    require('./views/gradient_view');
     require('./controllers/app_controller');
 });
 

@@ -10,6 +10,21 @@ var myShader = createShader(source);
 console.log(myShader);*/
 
 module.exports = {
+    'gradient' : {
+        uniforms: THREE.UniformsUtils.merge( [
+
+            {
+
+            "tOne"     : { type: "t", value: null },
+            "tGrade"     : { type: "t", value: null }
+
+            }
+
+            ] ),
+            
+            fragmentShader:glslify('../../../glsl/gradientMap.frag'),
+            vertexShader:glslify('../../../glsl/basic.vert')
+    },//HOTDAAWGS
     'mix' : {
         uniforms: THREE.UniformsUtils.merge( [
 
